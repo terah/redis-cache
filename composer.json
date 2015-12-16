@@ -1,17 +1,17 @@
 {
-    "name": ":vendor/:package_name",
-    "description": ":package_description",
+    "name": "terah/redis-cache",
+    "description": "A very simple redis caching lib with hierarchical keys",
     "keywords": [
-        ":vendor",
-        ":package_name"
+        "terah",
+        "redis-cache"
     ],
-    "homepage": "https://github.com/:vendor/:package_name",
+    "homepage": "https://github.com/terah/redis-cache",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": ":author_email",
-            "homepage": ":author_website",
+            "name": "Terry Cullen",
+            "email": "terry@terah.com.au",
+            "homepage": "terrycullen.com.au",
             "role": "Developer"
         }
     ],
@@ -25,12 +25,12 @@
     },
     "autoload": {
         "psr-4": {
-            ":vendor\\:package_name\\": "src"
+            "terah\\redis-cache\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            ":vendor\\:package_name\\Test\\": "tests"
+            "terah\\redis-cache\\Test\\": "tests"
         }
     },
     "scripts": {
