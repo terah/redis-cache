@@ -4,7 +4,7 @@ namespace Terah\RedisCache\Test;
 
 use Terah\RedisCache\RedisCache;
 
-class RedisCacheTest
+class RedisCacheTest extends \PHPUnit_Framework_TestCase
 {
     /** @var RedisCache */
     protected $redisCache = null;

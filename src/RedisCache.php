@@ -59,11 +59,10 @@ class RedisCache
      */
     public function set($key, $data, $ttl=null)
     {
-        $ttl    = $this->_getTtl($ttl);
-        $key    = $this->_formatKey($key);
-        // todo: check strtotime can handle this...
-        $expiration = strtotime('+' . $ttl . ' seconds');
-        $data       = serialize(['data' => $data, 'expiration' => $expiration]);
+        $ttl            = $this->_getTtl($ttl);
+        $key            = $this->_formatKey($key);
+        $expiration     = strtotime('+' . $ttl . ' seconds');
+        $data           = serialize(['data' => $data, 'expiration' => $expiration]);
 
         return $this->redisClient->setEx($key, $ttl, $data);
     }

@@ -27,12 +27,12 @@
     },
     "autoload": {
         "psr-4": {
-            "terah\\redis-cache\\": "src"
+            "Terah\\RedisCache\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "terah\\redis-cache\\Test\\": "tests"
+            "Terah\\RedisCache\\Test\\": "tests/"
         }
     },
     "scripts": {
