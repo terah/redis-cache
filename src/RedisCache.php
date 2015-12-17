@@ -188,7 +188,7 @@ class RedisCache
      */
     protected function _formatKey($key, $allowDirectory=false)
     {
-        Assert($key)->notEmpty()->regex('/^\/[a-z0-9_\.\-\/]+$/', 'Invalid key format specified.');
+        Assert($key)->notEmpty()->regex('/^[a-z0-9_\.\-\/]+$/', 'Invalid key format specified.');
         Assert(strpos($key, '//'))->false('Invalid key format specified.  You can not have two // together');
         if ( ! $allowDirectory )
         {

@@ -7,10 +7,7 @@
 [![Quality Score][ico-code-quality]][link-code-quality]
 [![Total Downloads][ico-downloads]][link-downloads]
 
-**Note:** Replace ```Terry Cullen``` ```terah``` ```terrycullen.com.au``` ```terry@terah.com.au``` ```terah``` ```redis-cache``` ```A very simple redis caching lib with hierarchical keys``` with their correct values in [README.md](README.md), [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [LICENSE.md](LICENSE.md) and [composer.json](composer.json) files, then delete this line.
-
-This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what
-PSRs you support to avoid any confusion with users and contributors.
+Super simple redis caching implementation.
 
 ## Install
 
@@ -23,8 +20,38 @@ $ composer require terah/redis-cache
 ## Usage
 
 ``` php
-$skeleton = new League\Skeleton();
-echo $skeleton->echoPhrase('Hello, League!');
+
+$redis          = new \Redis();
+$redis->connect('127.0.0.1', 6379);
+
+$namespace      = 'my-short-db-cache';
+$defaultTtl     = 60 * 60; // 1 hour
+$cache          = new Terah\RedisCache\RedisCache($redis, $defaultTtl, $namespace);
+
+// Save your data
+$cache->set('my-user-list', expensiveFunctionCall(), 60 * 60 * 2); // Ttl will default to $defaultTtl
+
+// Fetch your data
+$myData         = $cache->get('my-user-list');
+
+// Deletes
+$cache->delete('my-user-list');
+
+// Convenient callback handler
+$callback = function() {
+    return expensiveDataFetch();
+}
+$data = $cache->remember('my-user-list', $callback, 60 * 60 * 1);
+
+// Hierarchical keys - caching in 'directories'
+
+$cache->set('/user_data/user_profiles/freddy', $data);
+$cache->set('/user_data/user_profiles/betty', $data);
+$cache->set('/user_data/user_profiles/micky', $data);
+
+// now you can flush all user data:
+$cache->delete('/user_data/');
+
 ```
 
 ## Change log
