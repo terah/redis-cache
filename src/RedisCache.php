@@ -3,9 +3,12 @@
 namespace Terah\RedisCache;
 
 use function Terah\Assert\Assert;
+use Terah\ColourLog\LoggerTrait;
 
 class RedisCache
 {
+    use LoggerTrait;
+
     protected $redisClient  = null;
 
     protected $defaultTtl   = null;
@@ -32,9 +35,9 @@ class RedisCache
     public function setNamespace($namespace)
     {
         Assert($namespace)
-            ->nullOr('Namespace must be null or alphanumeric with /_-. characters and start/end in a trailing slash')
-            ->regex('/^\/[a-z0-9/_-.]+\/$/', 'Namespace must be null or alphanumeric with /_-. characters and start/end in a trailing slash');
-        $this->namespace = $namespace;
+            ->nullOr('Namespace must be null or alphanumeric with _- characters')
+            ->regex('/^[a-z0-9_-]+$/', 'Namespace must be null or alphanumeric with _- characters');
+        $this->namespace = empty($namespace) ? '' : $namespace . ':::';
         return $this;
     }
 
@@ -75,8 +78,9 @@ class RedisCache
     {
         $key    = $this->_formatKey($key);
         $data   = $this->redisClient->get($key);
+        $data   = unserialize($data);
 
-        return array_key_exists('data', $data) ? $data['data'] : null;
+        return is_array($data) && array_key_exists('data', $data) ? $data['data'] : null;
     }
 
     public function exists($key)
@@ -84,6 +88,19 @@ class RedisCache
         $key    = $this->_formatKey($key);
 
         return $this->redisClient->exists($key);
+    }
+
+    /**
+     * @param $key
+     * @return \DateTime
+     */
+    public function expires($key)
+    {
+        $key    = $this->_formatKey($key);
+
+        $ttl    = $this->redisClient->ttl($key);
+
+        return (new \DateTime)->setTimestamp(time() + $ttl);
     }
 
     /**
@@ -95,7 +112,6 @@ class RedisCache
     public function remember($key, callable $callback, $ttl=null)
     {
         $ttl    = $this->_getTtl($ttl);
-        $key    = $this->_formatKey($key);
         $data   = $this->get($key);
         if ( ! is_null($data) )
         {
@@ -124,7 +140,7 @@ class RedisCache
             $this->redisClient->delete($keyOrDirectory);
             return true;
         }
-        $keys = $this->redisClient->keys($keyOrDirectory);
+        $keys = $this->redisClient->keys($keyOrDirectory . '*');
         foreach ( $keys as $key )
         {
             $this->redisClient->delete($key);
@@ -134,11 +150,29 @@ class RedisCache
     }
 
     /**
+     * @return array
+     */
+    public function allKeys()
+    {
+        $keys = $this->redisClient->keys($this->namespace . '*');
+        if ( empty($this->namespace) )
+        {
+            return $keys;
+        }
+        $namespaceLen   = strlen($this->namespace);
+        foreach ( $keys as $idx => $key )
+        {
+            $keys[$idx] = substr($key, $namespaceLen);
+        }
+        return $keys;
+    }
+
+    /**
      * @return bool
      */
     public function flushCache()
     {
-        $keys = $this->redisClient->keys($this->namespace);
+        $keys = $this->redisClient->keys($this->namespace . '*');
         foreach ( $keys as $key )
         {
             $this->redisClient->delete($key);
@@ -154,7 +188,8 @@ class RedisCache
      */
     protected function _formatKey($key, $allowDirectory=false)
     {
-        Assert($key)->regex('/^[a-z0-9/-._]$/', 'Invalid key format specified');
+        Assert($key)->notEmpty()->regex('/^\/[a-z0-9_\.\-\/]+$/', 'Invalid key format specified.');
+        Assert(strpos($key, '//'))->false('Invalid key format specified.  You can not have two // together');
         if ( ! $allowDirectory )
         {
             Assert($key)->notRegex('/\/$/', 'Keys cannot end in a / character');
