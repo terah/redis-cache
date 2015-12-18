@@ -68,13 +68,13 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($exists);
     }
 
-    public function testFlushCache()
+    public function testflush()
     {
         $data           =  ['asdfasdf' => 'acdasdcasd', 'cadcadscads' => 'cacee'];
         $this->redisCache->set($this->key, $data, 60 * 30);
         $exists         = $this->redisCache->exists($this->key);
         $this->assertTrue($exists);
-        $this->redisCache->flushCache();
+        $this->redisCache->flush();
         $exists         = $this->redisCache->exists($this->key);
         $this->assertFalse($exists);
     }
@@ -115,6 +115,6 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
 
     public function tearDown()
     {
-        $this->redisCache->flushCache();
+        $this->redisCache->flush();
     }
 }

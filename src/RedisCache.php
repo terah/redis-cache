@@ -72,7 +72,7 @@ class RedisCache
 
     /**
      * @param string $key
-     * @return null
+     * @return mixed
      */
     public function get($key)
     {
@@ -170,7 +170,7 @@ class RedisCache
     /**
      * @return bool
      */
-    public function flushCache()
+    public function flush()
     {
         $keys = $this->redisClient->keys($this->namespace . '*');
         foreach ( $keys as $key )
@@ -188,7 +188,7 @@ class RedisCache
      */
     protected function _formatKey($key, $allowDirectory=false)
     {
-        Assert($key)->notEmpty()->regex('/^[a-z0-9_\.\-\/]+$/', 'Invalid key format specified.');
+        Assert($key)->notEmpty()->regex('/^[a-zA-Z0-9_\.\-\/]+$/', 'Invalid key format specified.');
         Assert(strpos($key, '//'))->false('Invalid key format specified.  You can not have two // together');
         if ( ! $allowDirectory )
         {
