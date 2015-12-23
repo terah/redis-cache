@@ -80,7 +80,13 @@ class RedisCache
         $data   = $this->redisClient->get($key);
         $data   = unserialize($data);
 
-        return is_array($data) && array_key_exists('data', $data) ? $data['data'] : null;
+        if ( is_array($data) && array_key_exists('data', $data) )
+        {
+            $this->_logAction("Cache hit on key {$key}");
+            return $data['data'];
+        }
+        $this->_logAction("Cache miss on key {$key}");
+        return null;
     }
 
     public function exists($key)
@@ -188,13 +194,14 @@ class RedisCache
      */
     protected function _formatKey($key, $allowDirectory=false)
     {
-        Assert($key)->notEmpty()->regex('/^[a-zA-Z0-9_\.\-\/]+$/', 'Invalid key format specified.');
-        Assert(strpos($key, '//'))->false('Invalid key format specified.  You can not have two // together');
-        if ( ! $allowDirectory )
+        $regex          = '@^/[a-zA-Z0-9._-]+((/[a-zA-Z0-9._-]+)*)$@';
+        $errorMessage   = "The set key format must be in a directory like structure i.e '/dirname/dirname/dirname' where dirname is alphanumeric and ._- character'. %s given";
+        if ( $allowDirectory )
         {
-            Assert($key)->notRegex('/\/$/', 'Keys cannot end in a / character');
+            $regex          = '@^/[a-zA-Z0-9._-]+((/[a-zA-Z0-9._-]+)*)(/|)$@';
+            $errorMessage   = "The set key format must be in a directory like structure i.e '/dirname/dirname/dirname' where dirname is alphanumeric and ._- character'. %s given";
         }
-
+        Assert($key)->notEmpty()->regex($regex, $errorMessage);
         return $this->namespace . $key;
     }
 
@@ -209,5 +216,17 @@ class RedisCache
         return $ttl;
     }
 
+    /**
+     * @param string $message
+     * @return bool|null
+     */
+    protected function _logAction($message)
+    {
+        if ( ! $this->logger )
+        {
+            return true;
+        }
+        return $this->logger->debug($message);
+    }
 
 }
