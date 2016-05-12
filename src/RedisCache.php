@@ -141,17 +141,20 @@ class RedisCache
     {
         $keyOrDirectory    = $this->_formatKey($keyOrDirectory, true);
         // Is the is 'directory' of keys? Match and delete
+
         if ( ! preg_match('/\/$/', $keyOrDirectory) )
         {
             $this->redisClient->delete($keyOrDirectory);
             return true;
         }
-        $keys = $this->redisClient->keys($keyOrDirectory . '*');
+        $keys           = $this->redisClient->keys($keyOrDirectory . '*');
+        $count          = 0;
         foreach ( $keys as $key )
         {
             $this->redisClient->delete($key);
+            $count++;
         }
-
+        $this->_logAction("Cache delete on key: {$keyOrDirectory} ({$count} keys deleted)");
         return true;
     }
 
@@ -185,6 +188,16 @@ class RedisCache
         }
 
         return true;
+    }
+
+    /**
+     * @param $key
+     * @return int
+     */
+    public function getTtl($key)
+    {
+        $key    = $this->_formatKey($key);
+        return $this->redisClient->ttl($key);
     }
 
     /**
