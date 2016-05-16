@@ -4,16 +4,16 @@ namespace Terah\RedisCache;
 
 trait RedisCacheTrait
 {
-    /** @var RedisCache */
+    /** @var CacheInterface */
     protected $cache;
 
     /**
      * Sets a cache.
      *
-     * @param RedisCache $cache
+     * @param CacheInterface $cache
      * @return $this
      */
-    public function setCache(RedisCache $cache)
+    public function setCache(CacheInterface $cache)
     {
         $this->cache = $cache;
         return $this;

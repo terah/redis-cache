@@ -11,8 +11,8 @@ use Redis;
  * Class RedisCachePool
  *
  * @package Terah\RedisCache
- * @method RedisCache setNamespace(string $namespace)
- * @method RedisCache setDefaultTtl(int $defaultTtl)
+ * @method CacheInterface setNamespace(string $namespace)
+ * @method CacheInterface setDefaultTtl(int $defaultTtl)
  * @method bool set(string $key, mixed $data, int $ttl=null)
  * @method mixed get(string $key)
  * @method bool exists(string $key)
@@ -26,7 +26,7 @@ class RedisCachePool
 {
     use LoggerTrait;
     /**
-     * @var RedisCache[]
+     * @var CacheInterface[]
      */
     protected $caches       = [];
 
@@ -54,7 +54,7 @@ class RedisCachePool
 
     /**
      * @param string $cache
-     * @returns RedisCache
+     * @returns CacheInterface
      * @throws \Exception
      */
     public function getCache($cache='default')
@@ -90,55 +90,3 @@ class RedisCachePool
 
 
 }
-
-
-
-//
-
-//
-//    /**
-//     * @param string $name
-//     * @param string $pool
-//     *
-//     * @return \Interfaces\ItemInterface
-//     */
-//    public function get($name, $pool='default')
-//    {
-//        try
-//        {
-//            return $this->getPool($pool)->getItem($name)->get();
-//        }
-//        catch (\Exception $e)
-//        {
-//            $this->logger->error($e->getMessage());
-//            return false;
-//        }
-//    }
-//
-//    /**
-//     * @param           $name
-//     * @param           $value
-//     * @param string    $pool
-//     * @param \DateTime|int|string $ttl
-//     *
-//     * @return bool
-//     * @throws \Exception
-//     */
-//    public function set($name, $value, $pool='default', $ttl=null)
-//    {
-//        try
-//        {
-//            if ( is_null($ttl) )
-//            {
-//                $ttl = is_null($this->config[$pool]['duration']) ? null : new \DateTime($this->config[$pool]['duration']);
-//            }
-//            $ttl = ! is_string($ttl) ? $ttl : new \DateTime($ttl);
-//            return $this->getPool($pool)->getItem($name)->set($value, $ttl);
-//        }
-//        catch (\Exception $e)
-//        {
-//            $this->logger->error($e->getMessage());
-//            return false;
-//        }
-//    }
-
