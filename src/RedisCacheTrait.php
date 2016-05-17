@@ -18,4 +18,14 @@ trait RedisCacheTrait
         $this->cache = $cache;
         return $this;
     }
+
+    /**
+     * Gets a cache.
+     *
+     * @return CacheInterface
+     */
+    public function getCache()
+    {
+        return $this->cache;
+    }
 }

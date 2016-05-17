@@ -5,7 +5,7 @@ namespace Terah\RedisCache;
 use function Terah\Assert\Assert;
 use Terah\ColourLog\LoggerTrait;
 
-class RedisCache
+class RedisCache implements CacheInterface
 {
     use LoggerTrait;
 
