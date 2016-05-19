@@ -43,11 +43,11 @@ interface CacheInterface
 
     /**
      * @param string $key
-     * @param callable $callback
+     * @param \Closure $callback
      * @param int|null $ttl
      * @return null
      */
-    public function remember($key, callable $callback, $ttl=null);
+    public function remember($key, \Closure $callback, $ttl=null);
 
     /**
      * @param string $keyOrDirectory

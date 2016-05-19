@@ -67,7 +67,7 @@ class RedisCache implements CacheInterface
         $expiration     = strtotime('+' . $ttl . ' seconds');
         $data           = serialize(['data' => $data, 'expiration' => $expiration]);
 
-        return $this->redisClient->setEx($key, $ttl, $data);
+        return $this->redisClient->setex($key, $ttl, $data);
     }
 
     /**
@@ -111,11 +111,11 @@ class RedisCache implements CacheInterface
 
     /**
      * @param string $key
-     * @param callable $callback
+     * @param \Closure $callback
      * @param int|null $ttl
      * @return null
      */
-    public function remember($key, callable $callback, $ttl=null)
+    public function remember($key, \Closure $callback, $ttl=null)
     {
         $ttl    = $this->_getTtl($ttl);
         $data   = $this->get($key);
