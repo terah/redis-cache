@@ -5,6 +5,11 @@ namespace Terah\RedisCache;
 use function Terah\Assert\Assert;
 use Terah\ColourLog\LoggerTrait;
 
+/**
+ * Class RedisCache
+ *
+ * @package Terah\RedisCache
+ */
 class RedisCache implements CacheInterface
 {
     use LoggerTrait;
@@ -89,6 +94,10 @@ class RedisCache implements CacheInterface
         return null;
     }
 
+    /**
+     * @param $key
+     * @return bool
+     */
     public function exists($key)
     {
         $key    = $this->_formatKey($key);
