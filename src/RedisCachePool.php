@@ -36,18 +36,45 @@ class RedisCachePool
      * RedisCachePool constructor.
      *
      * @param array  $config
-     * @param Redis $redis
+     * @param Redis[] $redisServers
      * @param Logger $logger
      */
-    public function __construct(array $config=[], Redis $redis, Logger $logger)
+    public function __construct(array $config=[], array $redisServers, Logger $logger)
     {
         $this->setLogger($logger);
+
+        $servers            = [
+            'read'              => [],
+            'write'             => [],
+            'delete'            => [],
+            'all'               => [],
+        ];
+        foreach ( $redisServers['hosts'] as $type => $hosts )
+        {
+            foreach ( $hosts as $host )
+            {
+                $parts      = explode(':', $host);
+                $hostname   = $parts[0];
+                $port       = isset($parts[1]) ? $parts[1] : $redisServers['port'];
+                $timeout    = $redisServers['timeout'];
+                $password   = $redisServers['password'];
+                if ( ! array_key_exists($host, $servers['all']) )
+                {
+                    $redis                  = new Redis;
+                    $redis->pconnect($hostname, $port, $timeout);
+                    $redis->auth($password);
+                    $servers['all'][$host]  = $redis;
+                }
+                $servers[$type][$host] = $servers['all'][$host];
+            }
+        }
+
         foreach ( $config as $name => $conf )
         {
             $conf = (object)$conf;
             Assert($conf)->propertiesExist(['default_ttl', 'global_flush']);
 
-            $this->caches[$name]        = (new RedisCache($redis, $conf->default_ttl, $name))->setLogger($logger);
+            $this->caches[$name]        = (new RedisCache($servers, $conf->default_ttl, $name))->setLogger($logger);
             $this->globalFlush[$name]   = $conf->global_flush;
         }
     }
