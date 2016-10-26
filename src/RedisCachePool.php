@@ -32,12 +32,14 @@ class RedisCachePool
 
     /** @var string[] */
     protected $globalFlush  = [];
+
     /**
      * RedisCachePool constructor.
      *
      * @param array  $config
      * @param Redis[] $redisServers
      * @param Logger $logger
+     * @throws \Exception
      */
     public function __construct(array $config=[], array $redisServers, Logger $logger)
     {
@@ -49,6 +51,7 @@ class RedisCachePool
             'delete'            => [],
             'all'               => [],
         ];
+        $failedServers      = [];
         foreach ( $redisServers['hosts'] as $type => $hosts )
         {
             foreach ( $hosts as $host )
@@ -58,14 +61,33 @@ class RedisCachePool
                 $port       = isset($parts[1]) ? $parts[1] : $redisServers['port'];
                 $timeout    = $redisServers['timeout'];
                 $password   = $redisServers['password'];
-                if ( ! array_key_exists($host, $servers['all']) )
+                try
                 {
-                    $redis                  = new Redis;
-                    $redis->pconnect($hostname, $port, $timeout);
-                    $redis->auth($password);
-                    $servers['all'][$host]  = $redis;
+                    if ( ! in_array("{$hostname}:{$port}", $failedServers) )
+                    {
+                        if ( ! array_key_exists($host, $servers['all']) )
+                        {
+                            $redis                  = new Redis;
+                            $redis->pconnect($hostname, $port, $timeout);
+                            $redis->auth($password);
+                            $servers['all'][$host]  = $redis;
+                        }
+                        $servers[$type][$host] = $servers['all'][$host];
+                    }
                 }
-                $servers[$type][$host] = $servers['all'][$host];
+                catch ( \Exception $e )
+                {
+                    $failedServers[] = "{$hostname}:{$port}";
+                    $this->logger->error($e->getMessage(), compact('hostname', 'port', 'timeout'));
+                }
+            }
+        }
+        foreach ( ['read', 'write', 'delete'] as $type )
+        {
+            if ( ! empty($redisServers['hosts'][$type]) && empty($servers[$type]) )
+            {
+                $this->logger->error("There are no {$type} redis servers online.", ['config' => $redisServers, 'online' => $servers]);
+                throw new \Exception("There are no {$type} redis servers online.");
             }
         }
 
