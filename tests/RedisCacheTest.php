@@ -49,7 +49,7 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
     {
         $redis              = new \Redis();
         $redis->connect('127.0.0.1', 6379);
-        $this->redisCache = new RedisCache($redis, 60 * 10, 'my_cache_test');
+        $this->redisCache = new RedisCache([$redis], 60 * 10, 'my_cache_test');
     }
 
     public function testSet()
