@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Terah\RedisCache;
 
@@ -16,6 +16,7 @@ trait RedisCacheTrait
     public function setCache(CacheInterface $cache)
     {
         $this->cache = $cache;
+
         return $this;
     }
 
@@ -24,7 +25,7 @@ trait RedisCacheTrait
      *
      * @return CacheInterface
      */
-    public function getCache()
+    public function getCache() : CacheInterface
     {
         return $this->cache;
     }

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Terah\RedisCache\Test;
 
@@ -45,11 +45,15 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         $this->redisCache = new RedisCache($servers, 60 * 10, 'my_cache_test');
     }
 
-    protected function _getRedisInstance($host, $port)
+    /**
+     * @param string $host
+     * @param int $port
+     */
+    protected function _getRedisInstance(string $host='127.0.0.1', int $port=6379)
     {
         $redis              = new \Redis();
-        $redis->connect('127.0.0.1', 6379);
-        $this->redisCache = new RedisCache([$redis], 60 * 10, 'my_cache_test');
+        $redis->connect($host, $port);
+        $this->redisCache   = new RedisCache([$redis], 60 * 10, 'my_cache_test');
     }
 
     public function testSet()
@@ -60,8 +64,8 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         $expires        = $this->redisCache->expires($this->key);
         $expires        = $expires->getTimestamp();
         $fetchedData    = $this->redisCache->get($this->key);
-        $this->assertEquals($expiresAt, $expires);
-        $this->assertEquals(json_encode($data), json_encode($fetchedData));
+        static::assertEquals($expiresAt, $expires);
+        static::assertEquals(json_encode($data), json_encode($fetchedData));
     }
 
     public function testGet()
@@ -69,7 +73,7 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         $data           =  ['asdfasdf' => 'acdasdcasd', 'cadcadscads' => 'cacee'];
         $this->redisCache->set($this->key, $data, 60 * 30);
         $fetchedData   = $this->redisCache->get($this->key);
-        $this->assertEquals(json_encode($data), json_encode($fetchedData));
+        static::assertEquals(json_encode($data), json_encode($fetchedData));
     }
 
     public function testExists()
@@ -77,7 +81,7 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         $data           =  ['asdfasdf' => 'acdasdcasd', 'cadcadscads' => 'cacee'];
         $this->redisCache->set($this->key, $data, 60 * 30);
         $exists         = $this->redisCache->exists($this->key);
-        $this->assertTrue($exists);
+        static::assertTrue($exists);
     }
 
     public function testRemember()
@@ -88,7 +92,7 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         };
         $this->redisCache->remember($this->key, $callback, 60 * 10);
         $fetchedData   = $this->redisCache->remember($this->key, $callback, 60 * 10);
-        $this->assertEquals(json_encode($data), json_encode($fetchedData));
+        static::assertEquals(json_encode($data), json_encode($fetchedData));
     }
 
     public function testDelete()
@@ -96,10 +100,10 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         $data           =  ['asdfasdf' => 'acdasdcasd', 'cadcadscads' => 'cacee'];
         $this->redisCache->set($this->key, $data, 60 * 30);
         $exists         = $this->redisCache->exists($this->key);
-        $this->assertTrue($exists);
+        static::assertTrue($exists);
         $this->redisCache->delete($this->key);
         $exists         = $this->redisCache->exists($this->key);
-        $this->assertFalse($exists);
+        static::assertFalse($exists);
     }
 
     public function testflush()
@@ -107,10 +111,10 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         $data           =  ['asdfasdf' => 'acdasdcasd', 'cadcadscads' => 'cacee'];
         $this->redisCache->set($this->key, $data, 60 * 30);
         $exists         = $this->redisCache->exists($this->key);
-        $this->assertTrue($exists);
+        static::assertTrue($exists);
         $this->redisCache->flush();
         $exists         = $this->redisCache->exists($this->key);
-        $this->assertFalse($exists);
+        static::assertFalse($exists);
     }
 
     public function testHierarchicalKeys()
@@ -129,11 +133,11 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         }
         $allKeys    = $this->redisCache->allKeys();
         sort($allKeys);
-        $this->assertEquals(json_encode($keys), json_encode($allKeys));
+        static::assertEquals(json_encode($keys), json_encode($allKeys));
         $this->redisCache->delete('/asdf-asdc123/');
         $allKeys    = $this->redisCache->allKeys();
         sort($allKeys);
-        $this->assertEquals(json_encode([]), json_encode($allKeys));
+        static::assertEquals(json_encode([]), json_encode($allKeys));
     }
 
     public function testExpires()
@@ -141,10 +145,10 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
         $data           =  ['asdfasdf' => 'acdasdcasd', 'cadcadscads' => 'cacee'];
         $this->redisCache->set($this->key, $data, 10);
         $exists         = $this->redisCache->exists($this->key);
-        $this->assertTrue($exists);
+        static::assertTrue($exists);
         sleep(11);
         $exists         = $this->redisCache->exists($this->key);
-        $this->assertFalse($exists);
+        static::assertFalse($exists);
     }
 
     public function tearDown()

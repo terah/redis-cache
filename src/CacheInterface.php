@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Terah\RedisCache;
 
@@ -6,15 +6,15 @@ interface CacheInterface
 {
     /**
      * @param string $namespace
-     * @return $this
+     * @return CacheInterface
      */
-    public function setNamespace($namespace);
+    public function setNamespace(string $namespace) : CacheInterface;
 
     /**
      * @param int $defaultTtl
-     * @return $this
+     * @return CacheInterface
      */
-    public function setDefaultTtl($defaultTtl);
+    public function setDefaultTtl(int $defaultTtl) : CacheInterface;
 
     /**
      * @param string $key
@@ -22,54 +22,55 @@ interface CacheInterface
      * @param null|int $ttl
      * @return bool
      */
-    public function set($key, $data, $ttl=null);
+    public function set(string $key, $data, int $ttl=null) : bool;
 
     /**
      * @param string $key
      * @return mixed
      */
-    public function get($key);
+    public function get(string $key);
 
     /**
-     * @param $key
+     * @param string $key
+     * @return bool
      */
-    public function exists($key);
+    public function exists(string $key) : bool;
 
     /**
      * @param $key
      * @return \DateTime
      */
-    public function expires($key);
+    public function expires(string $key) : \DateTime;
 
     /**
      * @param string $key
      * @param \Closure $callback
-     * @param int|null $ttl
-     * @return null
+     * @param int $ttl
+     * @return mixed
      */
-    public function remember($key, \Closure $callback, $ttl=null);
+    public function remember(string $key, \Closure $callback, int $ttl=0);
 
     /**
      * @param string $keyOrDirectory
      * @return bool
      */
-    public function delete($keyOrDirectory);
+    public function delete(string $keyOrDirectory) : bool;
 
 
     /**
      * @return array
      */
-    public function allKeys();
+    public function allKeys() : array;
 
 
     /**
      * @return bool
      */
-    public function flush();
+    public function flush() : bool;
 
     /**
      * @param $key
      * @return int
      */
-    public function getTtl($key);
+    public function getTtl(string $key) : int;
 }

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Terah\RedisCache;
 
@@ -16,19 +16,21 @@ class RedisCache implements CacheInterface
     use LoggerTrait;
 
     /** @var Redis[]  */
-    protected $redisClients = null;
+    protected $redisClients     = [];
 
-    protected $defaultTtl   = null;
+    /** @var int  */
+    protected $defaultTtl       = 0;
 
-    protected $namespace    = null;
+    /** @var string  */
+    protected $namespace        = '';
 
     /**
      * RedisCache constructor.
      * @param Redis[] $redisClients
-     * @param null $defaultTtl
-     * @param null $namespace
+     * @param int $defaultTtl
+     * @param string $namespace
      */
-    public function __construct(array $redisClients, $defaultTtl=null, $namespace=null)
+    public function __construct(array $redisClients, int $defaultTtl=0, string $namespace='')
     {
         $this->redisClients  = $redisClients;
         $this->setDefaultTtl($defaultTtl);
@@ -37,37 +39,39 @@ class RedisCache implements CacheInterface
 
     /**
      * @param string $namespace
-     * @return $this
+     * @return CacheInterface
      */
-    public function setNamespace($namespace)
+    public function setNamespace(string $namespace) : CacheInterface
     {
         Assert($namespace)
             ->nullOr('Namespace must be null or alphanumeric with _- characters')
             ->regex('/^[a-z0-9_-]+$/', 'Namespace must be null or alphanumeric with _- characters');
         $this->namespace = empty($namespace) ? '' : $namespace . ':::';
+
         return $this;
     }
 
     /**
      * @param int $defaultTtl
-     * @return $this
+     * @return CacheInterface
      */
-    public function setDefaultTtl($defaultTtl)
+    public function setDefaultTtl(int $defaultTtl) : CacheInterface
     {
         Assert($defaultTtl)
             ->int('Default ttl must be an int between 1 and 315360000')
             ->range(1, 315360000, 'Default ttl must be an int between 1 and 315360000'); // Max 10 years..
         $this->defaultTtl = $defaultTtl;
+
         return $this;
     }
 
     /**
      * @param string $key
      * @param mixed $data
-     * @param null|int $ttl
+     * @param int $ttl
      * @return bool
      */
-    public function set($key, $data, $ttl=null)
+    public function set(string $key, $data, int $ttl=0) : bool
     {
         $ttl            = $this->_getTtl($ttl);
         $key            = $this->_formatKey($key);
@@ -86,7 +90,7 @@ class RedisCache implements CacheInterface
      * @param string $key
      * @return mixed
      */
-    public function get($key)
+    public function get(string $key)
     {
         $key    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
@@ -94,7 +98,7 @@ class RedisCache implements CacheInterface
         {
             /** @var Redis $client */
             $data   = $client->get($key);
-            $data   = unserialize($data);
+            $data   = unserialize((string)$data);
 
             if ( is_array($data) && array_key_exists('data', $data) )
             {
@@ -102,8 +106,10 @@ class RedisCache implements CacheInterface
                 return $data['data'];
             }
             $this->_logAction("Cache miss on key {$key}");
+
             return null;
         }
+
         return null;
     }
 
@@ -111,7 +117,7 @@ class RedisCache implements CacheInterface
      * @param $key
      * @return bool
      */
-    public function exists($key)
+    public function exists(string $key) : bool
     {
         $key    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
@@ -128,7 +134,7 @@ class RedisCache implements CacheInterface
      * @param $key
      * @return \DateTime
      */
-    public function expires($key)
+    public function expires(string $key) : \DateTime
     {
         $key    = $this->_formatKey($key);
 
@@ -137,6 +143,7 @@ class RedisCache implements CacheInterface
         {
             /** @var Redis $client */
             $ttl    = $client->ttl($key);
+
             return (new \DateTime)->setTimestamp(time() + $ttl);
         }
 
@@ -146,10 +153,10 @@ class RedisCache implements CacheInterface
     /**
      * @param string $key
      * @param \Closure $callback
-     * @param int|null $ttl
-     * @return null
+     * @param int $ttl
+     * @return mixed
      */
-    public function remember($key, \Closure $callback, $ttl=null)
+    public function remember(string $key, \Closure $callback, int $ttl=0)
     {
         $ttl    = $this->_getTtl($ttl);
         $data   = $this->get($key);
@@ -171,7 +178,7 @@ class RedisCache implements CacheInterface
      * @param string $keyOrDirectory
      * @return bool
      */
-    public function delete($keyOrDirectory)
+    public function delete(string $keyOrDirectory) : bool
     {
         $keyOrDirectory    = $this->_formatKey($keyOrDirectory, true);
         // Is the is 'directory' of keys? Match and delete
@@ -205,7 +212,7 @@ class RedisCache implements CacheInterface
     /**
      * @return array
      */
-    public function allKeys()
+    public function allKeys() : array
     {
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
@@ -221,15 +228,17 @@ class RedisCache implements CacheInterface
             {
                 $keys[$idx] = substr($key, $namespaceLen);
             }
+
             return $keys;
         }
+
         return [];
     }
 
     /**
      * @return bool
      */
-    public function flush()
+    public function flush() : bool
     {
         foreach ( $this->redisClients['delete'] as $client )
         {
@@ -248,7 +257,7 @@ class RedisCache implements CacheInterface
      * @param $key
      * @return int
      */
-    public function getTtl($key)
+    public function getTtl(string $key) : int
     {
         $key    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
@@ -266,7 +275,7 @@ class RedisCache implements CacheInterface
      * @param bool $allowDirectory
      * @return string
      */
-    protected function _formatKey($key, $allowDirectory=false)
+    protected function _formatKey(string $key, bool $allowDirectory=false) : string
     {
         $regex          = '@^/[a-zA-Z0-9.:_-]+((/[a-zA-Z0-9.:_-]+)*)$@';
         $errorMessage   = "The set key format must be in a directory like structure i.e '/dirname/dirname/dirname' where dirname is alphanumeric and ._- character'. %s given";
@@ -276,31 +285,35 @@ class RedisCache implements CacheInterface
             $errorMessage   = "The set key format must be in a directory like structure i.e '/dirname/dirname/dirname' where dirname is alphanumeric and ._- character'. %s given";
         }
         Assert($key)->notEmpty()->regex($regex, $errorMessage);
+
         return $this->namespace . $key;
     }
 
     /**
-     * @param null|int $ttl
-     * @return null
+     * @param int $ttl
+     * @return int
      */
-    protected function _getTtl($ttl)
+    protected function _getTtl(int $ttl) : int
     {
-        $ttl = ! is_null($ttl) ? $ttl : $this->defaultTtl;
+        $ttl = $ttl ?: $this->defaultTtl;
         Assert($ttl)->int()->range(1, 315360000); // Max 10 years..
+
         return $ttl;
     }
 
     /**
      * @param string $message
-     * @return bool|null
+     * @return bool
      */
-    protected function _logAction($message)
+    protected function _logAction(string $message) : bool
     {
         if ( ! $this->logger )
         {
             return true;
         }
-        return $this->logger->debug($message);
+        $this->logger->debug($message);
+
+        return true;
     }
 
 }

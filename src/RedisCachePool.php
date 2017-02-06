@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Terah\RedisCache;
 
@@ -68,7 +68,7 @@ class RedisCachePool
                         if ( ! array_key_exists($host, $servers['all']) )
                         {
                             $redis                  = new Redis;
-                            $redis->pconnect($hostname, $port, $timeout);
+                            $redis->pconnect($hostname, (int)$port, $timeout);
                             $redis->auth($password);
                             $servers['all'][$host]  = $redis;
                         }
@@ -106,16 +106,17 @@ class RedisCachePool
      * @returns CacheInterface
      * @throws \Exception
      */
-    public function getCache($cache='default')
+    public function getCache(string $cache='default') : CacheInterface
     {
         Assert($this->caches)->keyExists($cache, "Could not load cache pool by name ({$cache})");
+
         return $this->caches[$cache];
     }
 
     /**
      * @return bool
      */
-    public function wipe()
+    public function wipe() : bool
     {
         foreach ( $this->globalFlush as $name => $doFlush )
         {
@@ -124,17 +125,18 @@ class RedisCachePool
                 $this->caches[$name]->flush();
             }
         }
+
         return true;
     }
 
     /**
-     * @param       $method
+     * @param string $method
      * @param array $arguments
      * @return mixed
      */
-    public function __call($method, array $arguments)
+    public function __call(string $method, array $arguments)
     {
-        return call_user_func_array(array($this->getCache('default'), $method), $arguments);
+        return call_user_func_array([$this->getCache('default'), $method], $arguments);
     }
 
 

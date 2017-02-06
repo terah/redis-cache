@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Terah\RedisCache;
 
@@ -6,18 +6,18 @@ class NullCache implements CacheInterface
 {
     /**
      * @param string $namespace
-     * @return $this
+     * @return CacheInterface
      */
-    public function setNamespace($namespace)
+    public function setNamespace(string $namespace) : CacheInterface
     {
         return $this;
     }
 
     /**
      * @param int $defaultTtl
-     * @return $this
+     * @return CacheInterface
      */
-    public function setDefaultTtl($defaultTtl)
+    public function setDefaultTtl(int $defaultTtl) : CacheInterface
     {
         return $this;
     }
@@ -25,10 +25,10 @@ class NullCache implements CacheInterface
     /**
      * @param string    $key
      * @param mixed    $data
-     * @param null|int $ttl
+     * @param int $ttl
      * @return bool
      */
-    public function set($key, $data, $ttl = null)
+    public function set(string $key, $data, int $ttl=0) : bool
     {
         return true;
     }
@@ -37,27 +37,27 @@ class NullCache implements CacheInterface
      * @param string $key
      * @return mixed
      */
-    public function get($key)
+    public function get(string $key)
     {
         return true;
     }
 
     /**
-     * @param $key
+     * @param string $key
      * @return bool
      */
-    public function exists($key)
+    public function exists(string $key) : bool
     {
         return true;
     }
 
     /**
-     * @param $key
+     * @param string $key
      * @return \DateTime
      */
-    public function expires($key)
+    public function expires(string $key) : \DateTime
     {
-        return null;
+        return new \DateTime();
     }
 
     /**
@@ -66,7 +66,7 @@ class NullCache implements CacheInterface
      * @param int|null $ttl
      * @return null
      */
-    public function remember($key, \Closure $callback, $ttl = null)
+    public function remember(string $key, \Closure $callback, int $ttl=0)
     {
         return $callback->__invoke();
     }
@@ -75,7 +75,7 @@ class NullCache implements CacheInterface
      * @param string $keyOrDirectory
      * @return bool
      */
-    public function delete($keyOrDirectory)
+    public function delete(string $keyOrDirectory) : bool
     {
         return true;
     }
@@ -83,7 +83,7 @@ class NullCache implements CacheInterface
     /**
      * @return array
      */
-    public function allKeys()
+    public function allKeys() : array
     {
         return [];
     }
@@ -91,17 +91,17 @@ class NullCache implements CacheInterface
     /**
      * @return bool
      */
-    public function flush()
+    public function flush() : bool
     {
         return true;
     }
 
     /**
-     * @param $key
+     * @param string $key
      * @return int
      */
-    public function getTtl($key)
+    public function getTtl(string $key) : int
     {
-        return null;
+        return 0;
     }
 }
