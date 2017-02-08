@@ -2,8 +2,7 @@
 
 namespace Terah\RedisCache;
 
-use function Terah\Assert\Assert;
-use Terah\ColourLog\LoggerTrait;
+use Terah\Assert\Assert;
 use Redis;
 
 /**
@@ -13,7 +12,31 @@ use Redis;
  */
 class RedisCache implements CacheInterface
 {
-    use LoggerTrait;
+    /** @var \Psr\Log\LoggerInterface */
+    protected $logger;
+
+    /**
+     * Sets a logger.
+     *
+     * @param \Psr\Log\LoggerInterface $logger
+     * @return $this
+     */
+    public function setLogger($logger)
+    {
+        $this->logger = $logger;
+
+        return $this;
+    }
+
+    /**
+     * Gets a logger.
+     *
+     * @return \Psr\Log\LoggerInterface
+     */
+    public function getLogger()
+    {
+        return $this->logger;
+    }
 
     /** @var Redis[]  */
     protected $redisClients     = [];
@@ -43,7 +66,7 @@ class RedisCache implements CacheInterface
      */
     public function setNamespace(string $namespace) : CacheInterface
     {
-        Assert($namespace)
+        Assert::that($namespace)
             ->nullOr('Namespace must be null or alphanumeric with _- characters')
             ->regex('/^[a-z0-9_-]+$/', 'Namespace must be null or alphanumeric with _- characters');
         $this->namespace = empty($namespace) ? '' : $namespace . ':::';
@@ -57,7 +80,7 @@ class RedisCache implements CacheInterface
      */
     public function setDefaultTtl(int $defaultTtl) : CacheInterface
     {
-        Assert($defaultTtl)
+        Assert::that($defaultTtl)
             ->int('Default ttl must be an int between 1 and 315360000')
             ->range(1, 315360000, 'Default ttl must be an int between 1 and 315360000'); // Max 10 years..
         $this->defaultTtl = $defaultTtl;
@@ -284,7 +307,7 @@ class RedisCache implements CacheInterface
             $regex          = '@^/[a-zA-Z0-9.:_-]+((/[a-zA-Z0-9.:_-]+)*)(/|)$@';
             $errorMessage   = "The set key format must be in a directory like structure i.e '/dirname/dirname/dirname' where dirname is alphanumeric and ._- character'. %s given";
         }
-        Assert($key)->notEmpty()->regex($regex, $errorMessage);
+        Assert::that($key)->notEmpty()->regex($regex, $errorMessage);
 
         return $this->namespace . $key;
     }
@@ -296,7 +319,7 @@ class RedisCache implements CacheInterface
     protected function _getTtl(int $ttl) : int
     {
         $ttl = $ttl ?: $this->defaultTtl;
-        Assert($ttl)->int()->range(1, 315360000); // Max 10 years..
+        Assert::that($ttl)->int()->range(1, 315360000); // Max 10 years..
 
         return $ttl;
     }

@@ -2,9 +2,7 @@
 
 namespace Terah\RedisCache;
 
-use function Terah\Assert\Assert;
-use Terah\ColourLog\Logger;
-use Terah\ColourLog\LoggerTrait;
+use Terah\Assert\Assert;
 use Redis;
 
 /**
@@ -24,7 +22,32 @@ use Redis;
  */
 class RedisCachePool
 {
-    use LoggerTrait;
+    /** @var \Psr\Log\LoggerInterface $logger */
+    protected $logger;
+
+    /**
+     * Sets a logger.
+     *
+     * @param \Psr\Log\LoggerInterface $logger
+     * @return $this
+     */
+    public function setLogger($logger)
+    {
+        $this->logger = $logger;
+
+        return $this;
+    }
+
+    /**
+     * Gets a logger.
+     *
+     * @return object
+     */
+    public function getLogger()
+    {
+        return $this->logger;
+    }
+
     /**
      * @var CacheInterface[]
      */
@@ -38,10 +61,10 @@ class RedisCachePool
      *
      * @param array  $config
      * @param Redis[] $redisServers
-     * @param Logger $logger
+     * @param \Psr\Log\LoggerInterface $logger
      * @throws \Exception
      */
-    public function __construct(array $config=[], array $redisServers, Logger $logger)
+    public function __construct(array $config=[], array $redisServers, $logger)
     {
         $this->setLogger($logger);
 
@@ -94,7 +117,7 @@ class RedisCachePool
         foreach ( $config as $name => $conf )
         {
             $conf = (object)$conf;
-            Assert($conf)->propertiesExist(['default_ttl', 'global_flush']);
+            Assert::that($conf)->propertiesExist(['default_ttl', 'global_flush']);
 
             $this->caches[$name]        = (new RedisCache($servers, $conf->default_ttl, $name))->setLogger($logger);
             $this->globalFlush[$name]   = $conf->global_flush;
@@ -108,7 +131,7 @@ class RedisCachePool
      */
     public function getCache(string $cache='default') : CacheInterface
     {
-        Assert($this->caches)->keyExists($cache, "Could not load cache pool by name ({$cache})");
+        Assert::that($this->caches)->keyExists($cache, "Could not load cache pool by name ({$cache})");
 
         return $this->caches[$cache];
     }
