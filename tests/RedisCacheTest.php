@@ -2,8 +2,6 @@
 
 namespace Terah\RedisCache\Test;
 
-require_once __DIR__ . '/../../../autoload.php';
-
 use Terah\RedisCache\RedisCache;
 use Redis;
 
