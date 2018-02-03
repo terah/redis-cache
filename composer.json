@@ -18,7 +18,7 @@
     "require": {
         "php" : ">=7.0",
         "psr/log": "1.*",
-        "terah/fluent-assert": "2.*"
+        "terah/fluent-assert": "3.*"
     },
     "require-dev": {
         "phpunit/phpunit" : "4.*",
