@@ -21,7 +21,6 @@
         "terah/fluent-assert": "3.*"
     },
     "require-dev": {
-        "phpunit/phpunit" : "4.*",
         "scrutinizer/ocular": "~1.1"
     },
     "autoload": {

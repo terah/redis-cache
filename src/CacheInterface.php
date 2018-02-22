@@ -19,10 +19,10 @@ interface CacheInterface
     /**
      * @param string $key
      * @param mixed $data
-     * @param null|int $ttl
+     * @param int $ttl
      * @return bool
      */
-    public function set(string $key, $data, int $ttl=null) : bool;
+    public function set(string $key, $data, int $ttl=0) : bool;
 
     /**
      * @param string $key
