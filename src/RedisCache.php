@@ -67,7 +67,7 @@ class RedisCache implements CacheInterface
     public function setNamespace(string $namespace) : CacheInterface
     {
         Assert::that($namespace)
-            ->nullOr('Namespace must be null or alphanumeric with _- characters')
+            ->nullOr()
             ->regex('/^[a-z0-9_-]+$/', 'Namespace must be null or alphanumeric with _- characters');
         $this->namespace = empty($namespace) ? '' : $namespace . ':::';
 
