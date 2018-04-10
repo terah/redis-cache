@@ -126,8 +126,8 @@ class RedisCachePool
 
     /**
      * @param string $cache
-     * @returns CacheInterface
-     * @throws \Exception
+     * @return CacheInterface
+     * @throws \Terah\Assert\AssertionFailedException
      */
     public function getCache(string $cache='default') : CacheInterface
     {

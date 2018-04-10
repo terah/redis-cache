@@ -15,7 +15,7 @@ trait RedisCacheTrait
      */
     public function setCache(CacheInterface $cache)
     {
-        $this->cache = $cache;
+        $this->cache            = $cache;
 
         return $this;
     }
