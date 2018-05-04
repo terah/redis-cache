@@ -18,7 +18,7 @@
     "require": {
         "php" : ">=7.0",
         "psr/log": "1.*",
-        "terah/fluent-assert": "3.*"
+        "terah/fluent-assert": "4.*"
     },
     "require-dev": {
         "scrutinizer/ocular": "~1.1"
