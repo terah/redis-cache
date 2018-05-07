@@ -181,13 +181,13 @@ class RedisCache implements CacheInterface
      */
     public function remember(string $key, \Closure $callback, int $ttl=0)
     {
-        $ttl    = $this->_getTtl($ttl);
-        $data   = $this->get($key);
+        $ttl                    = $this->_getTtl($ttl);
+        $data                   = $this->get($key);
         if ( ! is_null($data) )
         {
             return $data;
         }
-        $data   = $callback->__invoke();
+        $data                   = $callback->__invoke();
         if ( is_null($data) )
         {
             return null;

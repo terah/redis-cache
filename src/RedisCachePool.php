@@ -11,7 +11,7 @@ use Redis;
  * @package Terah\RedisCache
  * @method CacheInterface setNamespace(string $namespace)
  * @method CacheInterface setDefaultTtl(int $defaultTtl)
- * @method bool set(string $key, mixed $data, int $ttl=null)
+ * @method bool set(string $key, $data, int $ttl=null)
  * @method mixed get(string $key)
  * @method bool exists(string $key)
  * @method \DateTime expires(string $key)
