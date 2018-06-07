@@ -5,7 +5,7 @@
         "terah",
         "redis-cache"
     ],
-    "homepage": "https://github.com/terah/redis-cache",
+    "homepage": "https://git.terah.com.au/terah/redis-cache",
     "license": "MIT",
     "authors": [
         {
