@@ -17,6 +17,7 @@
     ],
     "require": {
         "php" : ">=7.0",
+        "ext-redis": "*",
         "psr/log": "1.*",
         "terah/fluent-assert": "4.*"
     },
