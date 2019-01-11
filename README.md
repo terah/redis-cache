@@ -74,7 +74,7 @@ If you discover any security related issues, please email terry@terah.com.au ins
 
 ## Credits
 
-- [Terry Cullen][link-author]
+- [Terry Cullen][https://bitbucket.org/terahdigital]
 - [All Contributors][link-contributors]
 
 ## License
@@ -93,5 +93,5 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 [link-scrutinizer]: https://scrutinizer-ci.com/g/terah/redis-cache/code-structure
 [link-code-quality]: https://scrutinizer-ci.com/g/terah/redis-cache
 [link-downloads]: https://packagist.org/packages/terah/redis-cache
-[link-author]: https://github.com/terah
+[https://bitbucket.org/terahdigital]: https://bitbucket.org/terahdigital
 [link-contributors]: ../../contributors
