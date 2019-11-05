@@ -18,8 +18,8 @@
     "require": {
         "php" : ">=7.0",
         "ext-redis": "*",
-        "psr/log": "1.*",
-        "terah/fluent-assert": "4.*"
+        "ext-psr": "*",
+        "ext-terah": "*"
     },
     "require-dev": {
         "scrutinizer/ocular": "~1.1"

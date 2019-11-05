@@ -2,7 +2,7 @@
 
 namespace Terah\RedisCache;
 
-use Terah\Assert\Assert;
+use Terah\Asrt\Asrt;
 use Redis;
 
 /**
@@ -66,7 +66,7 @@ class RedisCache implements CacheInterface
      */
     public function setNamespace(string $namespace) : CacheInterface
     {
-        Assert::that($namespace)
+        Asrt::that($namespace)
             ->nullOr()
             ->regex('/^[a-z0-9_-]+$/', 'Namespace must be null or alphanumeric with _- characters');
         $this->namespace = empty($namespace) ? '' : $namespace . ':::';
@@ -80,8 +80,8 @@ class RedisCache implements CacheInterface
      */
     public function setDefaultTtl(int $defaultTtl) : CacheInterface
     {
-        Assert::that($defaultTtl)
-            ->int('Default ttl must be an int between 1 and 315360000')
+        Asrt::that($defaultTtl)
+            ->isInt('Default ttl must be an int between 1 and 315360000')
             ->range(1, 315360000, 'Default ttl must be an int between 1 and 315360000'); // Max 10 years..
         $this->defaultTtl = $defaultTtl;
 
@@ -147,7 +147,7 @@ class RedisCache implements CacheInterface
         foreach ( $this->redisClients['read'] as $client )
         {
             /** @var Redis $client */
-            return $client->exists($key);
+            return (bool)$client->exists($key);
         }
 
         return false;
@@ -307,7 +307,7 @@ class RedisCache implements CacheInterface
             $regex          = '@^/[a-zA-Z0-9.:_-]+((/[a-zA-Z0-9.:_-]+)*)(/|)$@';
             $errorMessage   = "The set key format must be in a directory like structure i.e '/dirname/dirname/dirname' where dirname is alphanumeric and ._- character'. %s given";
         }
-        Assert::that($key)->notEmpty()->regex($regex, $errorMessage);
+        Asrt::that($key)->notEmpty()->regex($regex, $errorMessage);
 
         return $this->namespace . $key;
     }
@@ -319,7 +319,7 @@ class RedisCache implements CacheInterface
     protected function _getTtl(int $ttl) : int
     {
         $ttl = $ttl ?: $this->defaultTtl;
-        Assert::that($ttl)->int()->range(1, 315360000); // Max 10 years..
+        Asrt::that($ttl)->isInt()->range(1, 315360000); // Max 10 years..
 
         return $ttl;
     }

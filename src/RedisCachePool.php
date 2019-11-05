@@ -2,7 +2,7 @@
 
 namespace Terah\RedisCache;
 
-use Terah\Assert\Assert;
+use Terah\Asrt\Asrt;
 use Redis;
 
 /**
@@ -117,7 +117,7 @@ class RedisCachePool
         foreach ( $config as $name => $conf )
         {
             $conf = (object)$conf;
-            Assert::that($conf)->propertiesExist(['default_ttl', 'global_flush']);
+            Asrt::that($conf)->propertiesExist(['default_ttl', 'global_flush']);
 
             $this->caches[$name]        = (new RedisCache($servers, $conf->default_ttl, $name))->setLogger($logger);
             $this->globalFlush[$name]   = $conf->global_flush;
@@ -131,7 +131,7 @@ class RedisCachePool
      */
     public function getCache(string $cache='default') : CacheInterface
     {
-        Assert::that($this->caches)->keyExists($cache, "Could not load cache pool by name ({$cache})");
+        Asrt::that($this->caches)->keyExists($cache, "Could not load cache pool by name ({$cache})");
 
         return $this->caches[$cache];
     }
