@@ -4,6 +4,8 @@ namespace Terah\RedisCache;
 
 use Terah\Asrt\Asrt;
 use Redis;
+use Exception;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class RedisCachePool
@@ -22,35 +24,24 @@ use Redis;
  */
 class RedisCachePool
 {
-    /** @var \Psr\Log\LoggerInterface $logger */
+    /** @var LoggerInterface $logger */
     protected $logger;
 
-    /**
-     * Sets a logger.
-     *
-     * @param \Psr\Log\LoggerInterface $logger
-     * @return $this
-     */
-    public function setLogger($logger)
+
+    public function setLogger(LoggerInterface $logger) : RedisCachePool
     {
-        $this->logger = $logger;
+        $this->logger           = $logger;
 
         return $this;
     }
 
-    /**
-     * Gets a logger.
-     *
-     * @return object
-     */
-    public function getLogger()
+
+    public function getLogger() : LoggerInterface
     {
         return $this->logger;
     }
 
-    /**
-     * @var CacheInterface[]
-     */
+    /** @var CacheInterface[] */
     protected $caches       = [];
 
     /** @var string[] */
@@ -61,29 +52,29 @@ class RedisCachePool
      *
      * @param array  $config
      * @param Redis[] $redisServers
-     * @param \Psr\Log\LoggerInterface $logger
-     * @throws \Exception
+     * @param LoggerInterface $logger
+     * @throws Exception
      */
-    public function __construct(array $config=[], array $redisServers, $logger)
+    public function __construct(array $config=[], array $redisServers, LoggerInterface $logger)
     {
         $this->setLogger($logger);
 
-        $servers            = [
-            'read'              => [],
-            'write'             => [],
-            'delete'            => [],
-            'all'               => [],
+        $servers                = [
+            'read'                  => [],
+            'write'                 => [],
+            'delete'                => [],
+            'all'                   => [],
         ];
-        $failedServers      = [];
+        $failedServers          = [];
         foreach ( $redisServers['hosts'] as $type => $hosts )
         {
             foreach ( $hosts as $host )
             {
-                $parts      = explode(':', $host);
-                $hostname   = $parts[0];
-                $port       = isset($parts[1]) ? $parts[1] : $redisServers['port'];
-                $timeout    = $redisServers['timeout'];
-                $password   = $redisServers['password'];
+                $parts                  = explode(':', $host);
+                $hostname               = $parts[0];
+                $port                   = isset($parts[1]) ? $parts[1] : $redisServers['port'];
+                $timeout                = $redisServers['timeout'];
+                $password               = $redisServers['password'];
                 try
                 {
                     if ( ! in_array("{$hostname}:{$port}", $failedServers) )
@@ -95,10 +86,10 @@ class RedisCachePool
                             $redis->auth($password);
                             $servers['all'][$host]  = $redis;
                         }
-                        $servers[$type][$host] = $servers['all'][$host];
+                        $servers[$type][$host]  = $servers['all'][$host];
                     }
                 }
-                catch ( \Exception $e )
+                catch ( Exception $e )
                 {
                     $failedServers[] = "{$hostname}:{$port}";
                     $this->logger->error($e->getMessage(), compact('hostname', 'port', 'timeout'));
@@ -110,7 +101,8 @@ class RedisCachePool
             if ( ! empty($redisServers['hosts'][$type]) && empty($servers[$type]) )
             {
                 $this->logger->error("There are no {$type} redis servers online.", ['config' => $redisServers, 'online' => $servers]);
-                throw new \Exception("There are no {$type} redis servers online.");
+
+                throw new Exception("There are no {$type} redis servers online.");
             }
         }
 
@@ -124,11 +116,7 @@ class RedisCachePool
         }
     }
 
-    /**
-     * @param string $cache
-     * @return CacheInterface
-     * @throws \Terah\Asrt\AssertionFailedException
-     */
+
     public function getCache(string $cache='default') : CacheInterface
     {
         Asrt::that($this->caches)->keyExists($cache, "Could not load cache pool by name ({$cache})");
@@ -136,9 +124,7 @@ class RedisCachePool
         return $this->caches[$cache];
     }
 
-    /**
-     * @return bool
-     */
+
     public function wipe() : bool
     {
         foreach ( $this->globalFlush as $name => $doFlush )
@@ -152,11 +138,7 @@ class RedisCachePool
         return true;
     }
 
-    /**
-     * @param string $method
-     * @param array $arguments
-     * @return mixed
-     */
+
     public function __call(string $method, array $arguments)
     {
         return call_user_func_array([$this->getCache('default'), $method], $arguments);
