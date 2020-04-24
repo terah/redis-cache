@@ -2,11 +2,11 @@
 
 namespace Terah\RedisCache;
 
+use Closure;
 use Terah\Asrt\Asrt;
 use Redis;
 use DateTime;
-use Closure;
-use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerInterface as Logger;
 
 /**
  * Class RedisCache
@@ -15,7 +15,7 @@ use Psr\Log\LoggerInterface;
  */
 class RedisCache implements CacheInterface
 {
-    /** @var LoggerInterface */
+    /** @var Logger */
     protected $logger;
 
     /** @var Redis[]  */
@@ -27,7 +27,8 @@ class RedisCache implements CacheInterface
     /** @var string  */
     protected $namespace        = '';
 
-    public function setLogger(LoggerInterface $logger) : CacheInterface
+
+    public function setLogger(Logger $logger=null) : CacheInterface
     {
         $this->logger           = $logger;
 
@@ -35,10 +36,11 @@ class RedisCache implements CacheInterface
     }
 
 
-    public function getLogger() : LoggerInterface
+    public function getLogger() : Logger
     {
         return $this->logger;
     }
+
 
     /**
      * RedisCache constructor.
@@ -93,7 +95,7 @@ class RedisCache implements CacheInterface
     }
 
 
-    public function get(string $key)
+    public function get(string $key, bool $stopLogging=false)
     {
         $key                    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
@@ -105,11 +107,11 @@ class RedisCache implements CacheInterface
 
             if ( is_array($data) && array_key_exists('data', $data) )
             {
-                $this->_logAction("Cache hit on key {$key}");
+                if ( ! $stopLogging ) $this->_logAction("Cache hit on key {$key}");
 
                 return $data['data'];
             }
-            $this->_logAction("Cache miss on key {$key}");
+            if ( ! $stopLogging )  $this->_logAction("Cache miss on key {$key}");
 
             return null;
         }
@@ -147,16 +149,11 @@ class RedisCache implements CacheInterface
         return (new DateTime);
     }
 
-    /**
-     * @param string $key
-     * @param Closure $callback
-     * @param int $ttl
-     * @return mixed
-     */
-    public function remember(string $key, Closure $callback, int $ttl=0)
+
+    public function remember(string $key, Closure $callback, int $ttl=0, bool $stopLogging=false)
     {
         $ttl                    = $this->_getTtl($ttl);
-        $data                   = $this->get($key);
+        $data                   = $this->get($key, $stopLogging);
         if ( ! is_null($data) )
         {
             return $data;

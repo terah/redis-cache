@@ -2,18 +2,16 @@
 
 namespace Terah\RedisCache;
 
+use Psr\Log\LoggerInterface as Logger;
+use DateTime;
+use Closure;
+
 interface CacheInterface
 {
-    /**
-     * @param string $namespace
-     * @return CacheInterface
-     */
+
     public function setNamespace(string $namespace) : CacheInterface;
 
-    /**
-     * @param int $defaultTtl
-     * @return CacheInterface
-     */
+
     public function setDefaultTtl(int $defaultTtl) : CacheInterface;
 
     /**
@@ -24,53 +22,30 @@ interface CacheInterface
      */
     public function set(string $key, $data, int $ttl=0) : bool;
 
-    /**
-     * @param string $key
-     * @return mixed
-     */
-    public function get(string $key);
 
-    /**
-     * @param string $key
-     * @return bool
-     */
+    public function get(string $key, bool $stopLogging=false);
+
+
     public function exists(string $key) : bool;
 
-    /**
-     * @param $key
-     * @return \DateTime
-     */
-    public function expires(string $key) : \DateTime;
 
-    /**
-     * @param string $key
-     * @param \Closure $callback
-     * @param int $ttl
-     * @return mixed
-     */
-    public function remember(string $key, \Closure $callback, int $ttl=0);
+    public function expires(string $key) : DateTime;
 
-    /**
-     * @param string $keyOrDirectory
-     * @return bool
-     */
+
+    public function remember(string $key, Closure $callback, int $ttl=0, bool $stopLogging=false);
+
+
     public function delete(string $keyOrDirectory) : bool;
 
 
-    /**
-     * @return array
-     */
     public function allKeys() : array;
 
 
-    /**
-     * @return bool
-     */
     public function flush() : bool;
 
-    /**
-     * @param $key
-     * @return int
-     */
+
     public function getTtl(string $key) : int;
+
+
+    public function setLogger(Logger $logger) : CacheInterface;
 }

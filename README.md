@@ -93,5 +93,5 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 [link-scrutinizer]: https://scrutinizer-ci.com/g/terah/redis-cache/code-structure
 [link-code-quality]: https://scrutinizer-ci.com/g/terah/redis-cache
 [link-downloads]: https://packagist.org/packages/terah/redis-cache
-[https://bitbucket.org/terahdigital]: https://bitbucket.org/terahdigital
+[link-author]: https://bitbucket.org/terahdigital
 [link-contributors]: ../../contributors
