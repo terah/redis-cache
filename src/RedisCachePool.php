@@ -2,10 +2,11 @@
 
 namespace Terah\RedisCache;
 
-use Terah\Asrt\Asrt;
-use Redis;
+use DateTime;
 use Exception;
 use Psr\Log\LoggerInterface;
+use Terah\Assert\Assert;
+use Redis;
 
 /**
  * Class RedisCachePool
@@ -14,9 +15,9 @@ use Psr\Log\LoggerInterface;
  * @method CacheInterface setNamespace(string $namespace)
  * @method CacheInterface setDefaultTtl(int $defaultTtl)
  * @method bool set(string $key, $data, int $ttl=null)
- * @method mixed get(string $key)
+ * @method mixed get(string $key, bool $stopLogging=false)
  * @method bool exists(string $key)
- * @method \DateTime expires(string $key)
+ * @method DateTime expires(string $key)
  * @method mixed remember(string $key, callable $callback, int $ttl=null)
  * @method bool delete(string $keyOrDirectory)
  * @method string[] allKeys()
@@ -24,11 +25,10 @@ use Psr\Log\LoggerInterface;
  */
 class RedisCachePool
 {
-    /** @var LoggerInterface $logger */
-    protected $logger;
+    protected ?LoggerInterface $logger = null;
 
 
-    public function setLogger(LoggerInterface $logger) : RedisCachePool
+    public function setLogger(LoggerInterface $logger)
     {
         $this->logger           = $logger;
 
@@ -41,11 +41,11 @@ class RedisCachePool
         return $this->logger;
     }
 
-    /** @var CacheInterface[] */
-    protected $caches       = [];
+    /**  @var CacheInterface[] */
+    protected array $caches     = [];
 
     /** @var string[] */
-    protected $globalFlush  = [];
+    protected array $globalFlush = [];
 
     /**
      * RedisCachePool constructor.
@@ -53,9 +53,9 @@ class RedisCachePool
      * @param array  $config
      * @param Redis[] $redisServers
      * @param LoggerInterface $logger
-     * @throws Exception
+     * @param string $env
      */
-    public function __construct(array $config=[], array $redisServers, LoggerInterface $logger)
+    public function __construct(array $config, array $redisServers, LoggerInterface $logger, string $env)
     {
         $this->setLogger($logger);
 
@@ -108,10 +108,10 @@ class RedisCachePool
 
         foreach ( $config as $name => $conf )
         {
-            $conf = (object)$conf;
-            Asrt::that($conf)->propertiesExist(['default_ttl', 'global_flush']);
+            $conf               = (object)$conf;
+            Assert::that($conf)->propertiesExist(['default_ttl', 'global_flush']);
 
-            $this->caches[$name]        = (new RedisCache($servers, $conf->default_ttl, $name))->setLogger($logger);
+            $this->caches[$name]        = (new RedisCache($servers, $conf->default_ttl, $name, $env))->setLogger($logger);
             $this->globalFlush[$name]   = $conf->global_flush;
         }
     }
@@ -119,7 +119,7 @@ class RedisCachePool
 
     public function getCache(string $cache='default') : CacheInterface
     {
-        Asrt::that($this->caches)->keyExists($cache, "Could not load cache pool by name ({$cache})");
+        Assert::that($this->caches)->keyExists($cache, "Could not load cache pool by name ({$cache})");
 
         return $this->caches[$cache];
     }
@@ -141,7 +141,7 @@ class RedisCachePool
 
     public function __call(string $method, array $arguments)
     {
-        return call_user_func_array([$this->getCache('default'), $method], $arguments);
+        return call_user_func_array([$this->getCache(), $method], $arguments);
     }
 
 

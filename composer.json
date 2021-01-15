@@ -16,10 +16,10 @@
         }
     ],
     "require": {
-        "php" : ">=7.0",
+        "php" : ">=7.4",
         "ext-redis": "*",
-        "ext-psr": "*",
-        "ext-terah": "*"
+        "psr/log": "1.*",
+        "terah/fluent-assert": "6.*"
     },
     "require-dev": {
         "scrutinizer/ocular": "~1.1"

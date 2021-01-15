@@ -4,8 +4,7 @@ namespace Terah\RedisCache;
 
 trait RedisCacheTrait
 {
-    /** @var CacheInterface */
-    protected $cache;
+    protected ?CacheInterface $cache = null;
 
     /**
      * Sets a cache.

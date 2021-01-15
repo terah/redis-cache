@@ -4,17 +4,17 @@ namespace Terah\RedisCache\Test;
 
 require_once __DIR__ . '/../../../autoload.php';
 
+use PHPUnit_Framework_TestCase;
 use Terah\RedisCache\RedisCache;
 use Redis;
 
-class RedisCacheTest extends \PHPUnit_Framework_TestCase
+class RedisCacheTest extends PHPUnit_Framework_TestCase
 {
-    /** @var RedisCache */
-    protected $redisCache   = null;
+    protected ?RedisCache $redisCache   = null;
 
-    protected $key          = '/my-test-key';
+    protected string $key       = '/my-test-key';
 
-    public function setUp()
+    public function setUp() : void
     {
         $conf           = [
             'write'         => ['redis1.local'],
@@ -51,7 +51,7 @@ class RedisCacheTest extends \PHPUnit_Framework_TestCase
      */
     protected function _getRedisInstance(string $host='127.0.0.1', int $port=6379)
     {
-        $redis              = new \Redis();
+        $redis              = new Redis();
         $redis->connect($host, $port);
         $this->redisCache   = new RedisCache([$redis], 60 * 10, 'my_cache_test');
     }

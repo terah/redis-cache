@@ -2,30 +2,17 @@
 
 namespace Terah\RedisCache;
 
-use Terah\Asrt\Asrt;
+use Terah\Assert\Assert;
 use Redis;
 use DateTime;
 use Closure;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class RedisCache
- *
- * @package Terah\RedisCache
- */
+
 class RedisCache implements CacheInterface
 {
-    /** @var LoggerInterface */
-    protected $logger;
+    protected ?LoggerInterface $logger = null;
 
-    /** @var Redis[]  */
-    protected $redisClients     = [];
-
-    /** @var int  */
-    protected $defaultTtl       = 0;
-
-    /** @var string  */
-    protected $namespace        = '';
 
     public function setLogger(LoggerInterface $logger) : CacheInterface
     {
@@ -40,23 +27,34 @@ class RedisCache implements CacheInterface
         return $this->logger;
     }
 
+    /** @var Redis[][]  */
+    protected array $redisClients = [];
+
+    protected int $defaultTtl   = 0;
+
+     protected string $namespace = '';
+
+    protected string $env       = '';
+
     /**
      * RedisCache constructor.
-     * @param Redis[] $redisClients
+     * @param Redis[][] $redisClients
      * @param int $defaultTtl
      * @param string $namespace
+     * @param string $env
      */
-    public function __construct(array $redisClients, int $defaultTtl=0, string $namespace='')
+    public function __construct(array $redisClients, int $defaultTtl=0, string $namespace='', string $env='')
     {
         $this->redisClients     = $redisClients;
         $this->setDefaultTtl($defaultTtl);
         $this->setNamespace($namespace);
+        $this->setEnv($env);
     }
 
 
     public function setNamespace(string $namespace) : CacheInterface
     {
-        Asrt::that($namespace)
+        Assert::that($namespace)
             ->nullOr()
             ->regex('/^[a-z0-9_-]+$/', 'Namespace must be null or alphanumeric with _- characters');
         $this->namespace        = empty($namespace) ? '' : $namespace . ':::';
@@ -65,10 +63,21 @@ class RedisCache implements CacheInterface
     }
 
 
+    public function setEnv(string $env) : CacheInterface
+    {
+        Assert::that($env)
+            ->nullOr()
+            ->regex('/^[a-z0-9_-]+$/', 'Env must be null or alphanumeric with _- characters');
+        $this->env              = empty($env) ? '' : $env . ':::';
+
+        return $this;
+    }
+
+
     public function setDefaultTtl(int $defaultTtl) : CacheInterface
     {
-        Asrt::that($defaultTtl)
-            ->isInt('Default ttl must be an int between 1 and 315360000')
+        Assert::that($defaultTtl)
+            ->int('Default ttl must be an int between 1 and 315360000')
             ->range(1, 315360000, 'Default ttl must be an int between 1 and 315360000'); // Max 10 years..
         $this->defaultTtl       = $defaultTtl;
 
@@ -93,7 +102,35 @@ class RedisCache implements CacheInterface
     }
 
 
-    public function get(string $key)
+    public function incr(string $key, int $ttl=3600) : int
+    {
+        $key                    = $this->_formatKey($key);
+        $result                 = 0;
+        foreach ( $this->redisClients['write'] as $client )
+        {
+            $result                 = $client->incr($key);
+            $client->expire($key, $ttl);
+        }
+
+        return $result;
+    }
+
+
+    public function incrByFloat(string $key, float $value, int $ttl=3600) : float
+    {
+        $key                    = $this->_formatKey($key);
+        $result                 = 0;
+        foreach ( $this->redisClients['write'] as $client )
+        {
+            $result                 = $client->incrByFloat($key, $value);
+            $client->expire($key, $ttl);
+        }
+
+        return $result;
+    }
+
+
+    public function get(string $key, bool $stopLogging=false)
     {
         $key                    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
@@ -105,13 +142,35 @@ class RedisCache implements CacheInterface
 
             if ( is_array($data) && array_key_exists('data', $data) )
             {
-                $this->_logAction("Cache hit on key {$key}");
+                if ( ! $stopLogging ) $this->_logAction("Cache hit on key {$key}");
 
                 return $data['data'];
             }
-            $this->_logAction("Cache miss on key {$key}");
+            if ( ! $stopLogging )  $this->_logAction("Cache miss on key {$key}");
 
             return null;
+        }
+
+        return null;
+    }
+
+
+    public function getRaw(string $key)
+    {
+        $key                    = $this->_formatKey($key);
+        // todo: Only supporting one read client at this time.
+        foreach ( $this->redisClients['read'] as $client )
+        {
+            /** @var Redis $client */
+            $data                   = $client->get($key);
+
+            if ( $data )
+            {
+                $this->_logAction("Cache hit on key {$key}");
+
+                return $data;
+            }
+            $this->_logAction("Cache miss on key {$key}");
         }
 
         return null;
@@ -124,7 +183,6 @@ class RedisCache implements CacheInterface
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
-            /** @var Redis $client */
             return (bool)$client->exists($key);
         }
 
@@ -147,16 +205,11 @@ class RedisCache implements CacheInterface
         return (new DateTime);
     }
 
-    /**
-     * @param string $key
-     * @param Closure $callback
-     * @param int $ttl
-     * @return mixed
-     */
-    public function remember(string $key, Closure $callback, int $ttl=0)
+
+    public function remember(string $key, Closure $callback, int $ttl=0, bool $stopLogging=false)
     {
         $ttl                    = $this->_getTtl($ttl);
-        $data                   = $this->get($key);
+        $data                   = $this->get($key, $stopLogging);
         if ( ! is_null($data) )
         {
             return $data;
@@ -207,16 +260,17 @@ class RedisCache implements CacheInterface
 
     public function allKeys() : array
     {
+        $prefix                 = "{$this->env}{$this->namespace}";
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
             /** @var Redis $client */
-            $keys                   = $client->keys($this->namespace . '*');
-            if ( empty($this->namespace) )
+            $keys                   = $client->keys($prefix . '*');
+            if ( empty($prefix) )
             {
                 return $keys;
             }
-            $namespaceLen           = strlen($this->namespace);
+            $namespaceLen           = strlen($prefix);
             foreach ( $keys as $idx => $key )
             {
                 $keys[$idx]             = substr($key, $namespaceLen);
@@ -231,10 +285,10 @@ class RedisCache implements CacheInterface
 
     public function flush() : bool
     {
+        $prefix                 = "{$this->env}{$this->namespace}";
         foreach ( $this->redisClients['delete'] as $client )
         {
-            /** @var Redis $client */
-            $keys                   = $client->keys($this->namespace . '*');
+            $keys                   = $client->keys($prefix . '*');
             foreach ( $keys as $key )
             {
                 $client->del($key);
@@ -247,11 +301,10 @@ class RedisCache implements CacheInterface
 
     public function getTtl(string $key) : int
     {
-        $key                    = $this->_formatKey($key);
+        $key    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
-            /** @var Redis $client */
             return $client->ttl($key);
         }
 
@@ -268,16 +321,16 @@ class RedisCache implements CacheInterface
             $regex                  = '@^/[a-zA-Z0-9.:_-]+((/[a-zA-Z0-9.:_-]+)*)(/|)$@';
             $errorMessage           = "The set key format must be in a directory like structure i.e '/dirname/dirname/dirname' where dirname is alphanumeric and ._- character'. %s given";
         }
-        Asrt::that($key)->notEmpty()->regex($regex, $errorMessage);
+        Assert::that($key)->notEmpty()->regex($regex, $errorMessage);
 
-        return $this->namespace . $key;
+        return "{$this->env}{$this->namespace}{$key}";
     }
 
 
     protected function _getTtl(int $ttl) : int
     {
         $ttl                    = $ttl ?: $this->defaultTtl;
-        Asrt::that($ttl)->isInt()->range(1, 315360000); // Max 10 years..
+        Assert::that($ttl)->int()->range(1, 315360000); // Max 10 years..
 
         return $ttl;
     }

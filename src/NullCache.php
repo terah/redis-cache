@@ -2,106 +2,103 @@
 
 namespace Terah\RedisCache;
 
+use DateTime;
+use Closure;
+use Psr\Log\LoggerInterface;
+
 class NullCache implements CacheInterface
 {
-    /**
-     * @param string $namespace
-     * @return CacheInterface
-     */
+    protected ?LoggerInterface $logger = null;
+
+
     public function setNamespace(string $namespace) : CacheInterface
     {
         return $this;
     }
 
-    /**
-     * @param int $defaultTtl
-     * @return CacheInterface
-     */
+
     public function setDefaultTtl(int $defaultTtl) : CacheInterface
     {
         return $this;
     }
 
-    /**
-     * @param string    $key
-     * @param mixed    $data
-     * @param int $ttl
-     * @return bool
-     */
+
     public function set(string $key, $data, int $ttl=0) : bool
     {
         return true;
     }
 
-    /**
-     * @param string $key
-     * @return mixed
-     */
-    public function get(string $key)
+
+    public function incr(string $key, int $ttl=3600) : int
+    {
+        return 0;
+    }
+
+
+    public function incrByFloat(string $key, float $value, int $ttl=3600) : float
+    {
+        return 0;
+    }
+
+
+    public function get(string $key, bool $stopLogging=false)
     {
         return true;
     }
 
-    /**
-     * @param string $key
-     * @return bool
-     */
+
     public function exists(string $key) : bool
     {
         return true;
     }
 
-    /**
-     * @param string $key
-     * @return \DateTime
-     */
-    public function expires(string $key) : \DateTime
+
+    public function expires(string $key) : DateTime
     {
-        return new \DateTime();
+        return new DateTime();
     }
 
-    /**
-     * @param string   $key
-     * @param \Closure $callback
-     * @param int|null $ttl
-     * @return null
-     */
-    public function remember(string $key, \Closure $callback, int $ttl=0)
+
+    public function remember(string $key, Closure $callback, int $ttl=0, bool $stopLogging=false)
     {
         return $callback->__invoke();
     }
 
-    /**
-     * @param string $keyOrDirectory
-     * @return bool
-     */
+
     public function delete(string $keyOrDirectory) : bool
     {
         return true;
     }
 
-    /**
-     * @return array
-     */
+
     public function allKeys() : array
     {
         return [];
     }
 
-    /**
-     * @return bool
-     */
+
     public function flush() : bool
     {
         return true;
     }
 
-    /**
-     * @param string $key
-     * @return int
-     */
+
     public function getTtl(string $key) : int
     {
         return 0;
+    }
+
+
+    public function getRaw(string $key)
+    {
+        return null;
+    }
+
+
+    public function setLogger(LoggerInterface $logger) : CacheInterface
+    {
+        $this->logger           = $logger;
+
+        return $this;
     }
 }
