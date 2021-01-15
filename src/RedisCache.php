@@ -14,7 +14,8 @@ class RedisCache implements CacheInterface
     protected ?LoggerInterface $logger = null;
 
 
-    public function setLogger(LoggerInterface $logger) : CacheInterface
+
+    public function setLogger(LoggerInterface $logger=null) : CacheInterface
     {
         $this->logger           = $logger;
 
@@ -94,7 +95,6 @@ class RedisCache implements CacheInterface
 
         foreach ( $this->redisClients['write'] as $client )
         {
-            /** @var Redis $client */
             $client->setex($key, $ttl, $data);
         }
 
@@ -136,7 +136,6 @@ class RedisCache implements CacheInterface
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
-            /** @var Redis $client */
             $data                   = $client->get($key);
             $data                   = unserialize((string)$data);
 
@@ -161,7 +160,6 @@ class RedisCache implements CacheInterface
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
-            /** @var Redis $client */
             $data                   = $client->get($key);
 
             if ( $data )
@@ -196,7 +194,6 @@ class RedisCache implements CacheInterface
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
-            /** @var Redis $client */
             $ttl                    = $client->ttl($key);
 
             return (new DateTime)->setTimestamp(time() + $ttl);
@@ -234,7 +231,6 @@ class RedisCache implements CacheInterface
         {
             foreach ( $this->redisClients['delete'] as $client )
             {
-                /** @var Redis $client */
                 $client->del($keyOrDirectory);
             }
 
@@ -243,7 +239,6 @@ class RedisCache implements CacheInterface
         $count                  = 0;
         foreach ( $this->redisClients['delete'] as $client )
         {
-            /** @var Redis $client */
             $keys                   = $client->keys($keyOrDirectory . '*');
             $count                  = 0;
             foreach ( $keys as $key )
@@ -264,7 +259,6 @@ class RedisCache implements CacheInterface
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
-            /** @var Redis $client */
             $keys                   = $client->keys($prefix . '*');
             if ( empty($prefix) )
             {

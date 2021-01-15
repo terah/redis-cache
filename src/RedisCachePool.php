@@ -5,6 +5,7 @@ namespace Terah\RedisCache;
 use DateTime;
 use Exception;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Terah\Assert\Assert;
 use Redis;
 
@@ -28,7 +29,7 @@ class RedisCachePool
     protected ?LoggerInterface $logger = null;
 
 
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger) : RedisCachePool
     {
         $this->logger           = $logger;
 
@@ -57,6 +58,7 @@ class RedisCachePool
      */
     public function __construct(array $config, array $redisServers, LoggerInterface $logger, string $env)
     {
+        $logger                 = $logger ?? new NullLogger();
         $this->setLogger($logger);
 
         $servers                = [

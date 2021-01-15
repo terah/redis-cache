@@ -53,7 +53,7 @@ class RedisCacheTest extends PHPUnit_Framework_TestCase
     {
         $redis              = new Redis();
         $redis->connect($host, $port);
-        $this->redisCache   = new RedisCache([$redis], 60 * 10, 'my_cache_test');
+        $this->redisCache   = new RedisCache([[$redis]], 60 * 10, 'my_cache_test');
     }
 
     public function testSet()

@@ -2,6 +2,7 @@
 
 namespace Terah\RedisCache;
 
+use Psr\Log\LoggerInterface;
 use DateTime;
 use Closure;
 
@@ -47,4 +48,7 @@ interface CacheInterface
 
 
     public function getRaw(string $key);
+
+
+    public function setLogger(LoggerInterface $logger) : CacheInterface;
 }
