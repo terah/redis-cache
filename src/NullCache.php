@@ -23,7 +23,7 @@ class NullCache implements CacheInterface
     }
 
 
-    public function set(string $key, $data, int $ttl=0) : bool
+    public function set(string $key, mixed $data, int $ttl=0) : bool
     {
         return true;
     }
@@ -41,7 +41,7 @@ class NullCache implements CacheInterface
     }
 
 
-    public function get(string $key, bool $stopLogging=false)
+    public function get(string $key, bool $stopLogging=false) : mixed
     {
         return true;
     }
@@ -71,7 +71,7 @@ class NullCache implements CacheInterface
     }
 
 
-    public function allKeys() : array
+    public function allKeys(string $pattern='*') : array
     {
         return [];
     }
@@ -89,7 +89,7 @@ class NullCache implements CacheInterface
     }
 
 
-    public function getRaw(string $key)
+    public function getRaw(string $key) : mixed
     {
         return null;
     }
@@ -100,5 +100,17 @@ class NullCache implements CacheInterface
         $this->logger           = $logger;
 
         return $this;
+    }
+
+
+    public function recordEvent(string $key, int $secondsWindow) : CacheInterface
+    {
+        return $this;
+    }
+
+
+    public function getEventCount(string $key, int $secondsWindow) : int
+    {
+        return 0;
     }
 }

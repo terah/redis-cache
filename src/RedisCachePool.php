@@ -21,17 +21,29 @@ use Redis;
  * @method DateTime expires(string $key)
  * @method mixed remember(string $key, callable $callback, int $ttl=null)
  * @method bool delete(string $keyOrDirectory)
- * @method string[] allKeys()
+ * @method string[] allKeys(string $pattern='*')
  * @method bool flush()
+ * @method int incr(string $key, int $ttl=3600)
+ * @method float incrByFloat(string $key, int $ttl=3600)
  */
 class RedisCachePool
 {
     protected ?LoggerInterface $logger = null;
 
+    /** @var CacheInterface[] */
+    protected array $caches         = [];
+
+    /** @var string[] */
+    protected array $globalFlush    = [];
+
 
     public function setLogger(LoggerInterface $logger) : RedisCachePool
     {
         $this->logger           = $logger;
+        foreach ( $this->caches as $name => $cache )
+        {
+            $cache->setLogger($logger);
+        }
 
         return $this;
     }
@@ -42,23 +54,16 @@ class RedisCachePool
         return $this->logger;
     }
 
-    /**  @var CacheInterface[] */
-    protected array $caches     = [];
-
-    /** @var string[] */
-    protected array $globalFlush = [];
-
     /**
      * RedisCachePool constructor.
      *
      * @param array  $config
-     * @param Redis[] $redisServers
+     * @param Redis[][] $redisServers
      * @param LoggerInterface $logger
      * @param string $env
      */
     public function __construct(array $config, array $redisServers, LoggerInterface $logger, string $env)
     {
-        $logger                 = $logger ?? new NullLogger();
         $this->setLogger($logger);
 
         $servers                = [
@@ -77,6 +82,10 @@ class RedisCachePool
                 $port                   = isset($parts[1]) ? $parts[1] : $redisServers['port'];
                 $timeout                = $redisServers['timeout'];
                 $password               = $redisServers['password'];
+                $context                = $redisServers['context'];
+                $username               = $redisServers['username'];
+                $tls                    = $redisServers['tls'] ?? false;
+                $tls                    = $tls ? 'tls://' : '';
                 try
                 {
                     if ( ! in_array("{$hostname}:{$port}", $failedServers) )
@@ -84,8 +93,12 @@ class RedisCachePool
                         if ( ! array_key_exists($host, $servers['all']) )
                         {
                             $redis                  = new Redis;
-                            $redis->pconnect($hostname, (int)$port, $timeout);
-                            $redis->auth($password);
+                            $redis->pconnect($tls.$hostname, (int)$port, $timeout, null, 0, 0, $context);
+                            if ( $password )
+                            {
+                                $credentials           = $username ? [$username => $password] : $password;
+                                $redis->auth($credentials);
+                            }
                             $servers['all'][$host]  = $redis;
                         }
                         $servers[$type][$host]  = $servers['all'][$host];
@@ -145,6 +158,5 @@ class RedisCachePool
     {
         return call_user_func_array([$this->getCache(), $method], $arguments);
     }
-
 
 }

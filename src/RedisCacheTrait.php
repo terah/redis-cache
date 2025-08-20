@@ -2,6 +2,7 @@
 
 namespace Terah\RedisCache;
 
+
 trait RedisCacheTrait
 {
     protected ?CacheInterface $cache = null;
@@ -12,7 +13,7 @@ trait RedisCacheTrait
      * @param CacheInterface $cache
      * @return $this
      */
-    public function setCache(CacheInterface $cache)
+    public function setCache(CacheInterface $cache) : static
     {
         $this->cache            = $cache;
 

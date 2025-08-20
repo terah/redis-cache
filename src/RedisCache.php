@@ -2,10 +2,10 @@
 
 namespace Terah\RedisCache;
 
+use Closure;
 use Terah\Assert\Assert;
 use Redis;
 use DateTime;
-use Closure;
 use Psr\Log\LoggerInterface;
 
 
@@ -13,9 +13,17 @@ class RedisCache implements CacheInterface
 {
     protected ?LoggerInterface $logger = null;
 
+    /** @var Redis[][]  */
+    protected array $redisClients   = [];
+
+    protected int $defaultTtl       = 0;
+
+    protected string $namespace     = '';
+
+    protected string $env           = '';
 
 
-    public function setLogger(LoggerInterface $logger=null) : CacheInterface
+    public function setLogger(LoggerInterface $logger) : CacheInterface
     {
         $this->logger           = $logger;
 
@@ -28,14 +36,6 @@ class RedisCache implements CacheInterface
         return $this->logger;
     }
 
-    /** @var Redis[][]  */
-    protected array $redisClients = [];
-
-    protected int $defaultTtl   = 0;
-
-     protected string $namespace = '';
-
-    protected string $env       = '';
 
     /**
      * RedisCache constructor.
@@ -130,7 +130,7 @@ class RedisCache implements CacheInterface
     }
 
 
-    public function get(string $key, bool $stopLogging=false)
+    public function get(string $key, bool $stopLogging=false) : mixed
     {
         $key                    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
@@ -154,7 +154,7 @@ class RedisCache implements CacheInterface
     }
 
 
-    public function getRaw(string $key)
+    public function getRaw(string $key) : mixed
     {
         $key                    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
@@ -224,7 +224,7 @@ class RedisCache implements CacheInterface
 
     public function delete(string $keyOrDirectory) : bool
     {
-        $keyOrDirectory    = $this->_formatKey($keyOrDirectory, true);
+        $keyOrDirectory         = $this->_formatKey($keyOrDirectory, true);
         // Is the is 'directory' of keys? Match and delete
 
         if ( ! preg_match('/\/$/', $keyOrDirectory) )
@@ -253,13 +253,13 @@ class RedisCache implements CacheInterface
     }
 
 
-    public function allKeys() : array
+    public function allKeys(string $pattern='*') : array
     {
         $prefix                 = "{$this->env}{$this->namespace}";
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
-            $keys                   = $client->keys($prefix . '*');
+            $keys                   = $client->keys($prefix . $pattern);
             if ( empty($prefix) )
             {
                 return $keys;
@@ -295,7 +295,7 @@ class RedisCache implements CacheInterface
 
     public function getTtl(string $key) : int
     {
-        $key    = $this->_formatKey($key);
+        $key                    = $this->_formatKey($key);
         // todo: Only supporting one read client at this time.
         foreach ( $this->redisClients['read'] as $client )
         {
@@ -339,6 +339,39 @@ class RedisCache implements CacheInterface
         $this->logger->debug($message);
 
         return true;
+    }
+
+
+    public function recordEvent(string $key, int $secondsWindow) : CacheInterface
+    {
+        $keyOrDirectory         = $this->_formatKey($key, true);
+        $timestamp              = microtime(true);
+        $ttl                    = $secondsWindow + 300;
+        // Use pipeline for better performance
+        foreach ( $this->redisClients['write'] as $client )
+        {
+            $pipe                   = $client->multi(Redis::PIPELINE);
+            $pipe->zadd($key, $timestamp, uniqid());
+            $pipe->zremrangebyscore($key, '0', (string)($timestamp - $secondsWindow));
+            $pipe->expire($key, $ttl);
+            $pipe->exec();
+        }
+
+        return $this;
+    }
+
+
+    public function getEventCount(string $key, int $secondsWindow) : int
+    {
+        $keyOrDirectory         = $this->_formatKey($key, true);
+        $timeAgo                = microtime(true) - $secondsWindow;
+        foreach ( $this->redisClients['read'] as $client )
+        {
+            // Count events newer than 5 minutes ago
+            return $client->zcount($key, (string)$timeAgo, '+inf');
+        }
+
+        return 0;
     }
 
 }

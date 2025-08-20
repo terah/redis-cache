@@ -11,18 +11,18 @@
         {
             "name": "Terry Cullen",
             "email": "terry@terah.com.au",
-            "homepage": "http://terrycullen.com.au",
+            "homepage": "http://elry.com.au",
             "role": "Developer"
         }
     ],
     "require": {
-        "php" : ">=7.4",
+        "php" : ">=8.0",
         "ext-redis": "*",
-        "psr/log": "1.*",
-        "terah/fluent-assert": "6.*"
+        "ext-psr": "*",
+        "terah/fluent-assert": "8.*"
     },
     "require-dev": {
-        "scrutinizer/ocular": "~1.1"
+
     },
     "autoload": {
         "psr-4": {

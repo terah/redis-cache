@@ -6,18 +6,20 @@ use Psr\Log\LoggerInterface;
 use DateTime;
 use Closure;
 
+
 interface CacheInterface
 {
+
     public function setNamespace(string $namespace) : CacheInterface;
 
 
     public function setDefaultTtl(int $defaultTtl) : CacheInterface;
 
 
-    public function set(string $key, $data, int $ttl=0) : bool;
+    public function set(string $key, mixed $data, int $ttl=0) : bool;
 
 
-    public function get(string $key, bool $stopLogging=false);
+    public function get(string $key, bool $stopLogging=false) : mixed;
 
 
     public function exists(string $key) : bool;
@@ -32,7 +34,7 @@ interface CacheInterface
     public function delete(string $keyOrDirectory) : bool;
 
 
-    public function allKeys() : array;
+    public function allKeys(string $pattern='*') : array;
 
 
     public function flush() : bool;
@@ -47,8 +49,14 @@ interface CacheInterface
     public function incrByFloat(string $key, float $value, int $ttl=3600) : float;
 
 
-    public function getRaw(string $key);
+    public function getRaw(string $key) : mixed;
 
 
     public function setLogger(LoggerInterface $logger) : CacheInterface;
+
+
+    public function recordEvent(string $key, int $secondsWindow) : CacheInterface;
+
+
+    public function getEventCount(string $key, int $secondsWindow) : int;
 }
