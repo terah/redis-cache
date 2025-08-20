@@ -2,7 +2,7 @@
 
 Contributions are **welcome** and will be fully **credited**.
 
-We accept contributions via Pull Requests on [Bitbucket](https://bitbucket.org/terahdigital/redis-cache).
+We accept contributions via Pull Requests on [Github](https://github.com/terah/redis-cache).
 
 
 ## Pull Requests

@@ -5,13 +5,13 @@
         "terah",
         "redis-cache"
     ],
-    "homepage": "https://bitbucket.org/terahdigital/redis-cache",
+    "homepage": "https://github.com/terah/redis-cache",
     "license": "MIT",
     "authors": [
         {
             "name": "Terry Cullen",
             "email": "terry@terah.com.au",
-            "homepage": "http://elry.com.au",
+            "homepage": "https://elry.com.au",
             "role": "Developer"
         }
     ],
